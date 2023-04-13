@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import './App.css';
 import axios from 'axios';
 import styled from 'styled-components';
 import previewImage from './assets/preview.svg';
+import couldUploadImage from './assets/cloud-uploading.png';
 const FormData = require('form-data');
 
 const api = axios.create({
@@ -32,7 +33,19 @@ const Card = styled.div`
   box-shadow: rgba(99, 99, 99, 0.2) 0px 0px 8px 0px;
 `;
 
-const ImageDropper = styled.div`
+const ImageDropperActive = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  width: 300px;
+  height: 200px;
+  border: 2px solid rgb(96 159 247);
+  border-radius 12px;
+  background-color: #f6f8fb;
+`;
+
+const ImageDropperInactive = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
@@ -79,6 +92,7 @@ function App() {
 
   const [fileUploaded, setFileUploaded] = useState(false);
   const [imgUrl, setImgUrl] = useState('');
+  const [dragActive, setDragActive] = useState(false);
 
   const selectImageHandler = (event) => {
     if (event.target.files) {
@@ -105,17 +119,51 @@ function App() {
     .catch((err) => console.log(err));
   }
 
+  const dragHandler = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.target.tagName === 'DIV') {
+      setDragActive(true);
+    }
+  }
+
+  const dropHandler = (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    upload(event.dataTransfer.files[0]);
+  }
+
+  const wrapperDragHandler = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setDragActive(false);
+  }
+
+  const wrapperDropHandler = (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
   return (
     <div style={{position: 'absolute', width: '100%', height: '100%'}}>
       {!fileUploaded &&
-        <Wrapper>
+        <Wrapper onDragEnter={wrapperDragHandler} onDragOver={wrapperDragHandler} onDrop={wrapperDropHandler}>
           <Card>
             <h2 style={{color: '#4f4f4f'}}>Upload your image</h2>
             <label style={{color: '#828282'}}>File should be Jpeg, Png...</label>
-            <ImageDropper>
-              <img src={previewImage}/>
-              <label style={{color: '#d2d3d4'}}>Drag and Drop your image here</label>
-            </ImageDropper>
+            {dragActive &&
+              <ImageDropperActive onDragEnter={dragHandler} onDragOver={dragHandler} onDrop={dropHandler}>
+                <img src={couldUploadImage}/>
+                <label style={{color: '#d2d3d4'}}>Drop your image here to upload it</label>
+              </ImageDropperActive>
+            }
+            {!dragActive &&
+              <ImageDropperInactive onDragEnter={dragHandler} onDragOver={dragHandler} onDragLeave={dragHandler}>
+                <img src={previewImage}/>
+                <label style={{color: '#d2d3d4'}}>Drag and Drop your image here</label>
+              </ImageDropperInactive>
+            }            
+            
             <label style={{color: '#828282'}}>Or</label>
             <FileLabel htmlFor='upload-button'>Choose a file</FileLabel>
             <FileChooser id="upload-button" type='file' onChange={selectImageHandler}/>
