@@ -7,15 +7,15 @@ const Image = props => {
 
   const [imageUrl, setImageUrl] = useState('');
   const {id} = useParams();
-    
+  
   useEffect(() => {
     axios.get('http://localhost:3001/images/' + id, {
       responseType: 'blob'
-    }).then((fileRes) => {
-      const href = URL.createObjectURL(fileRes.data);
+    }).then((response) => {
+      const href = URL.createObjectURL(response.data);
       setImageUrl(href);
-    })
-  });
+    });
+  }, [id]);
 
   return (
     <img src={imageUrl}/>
